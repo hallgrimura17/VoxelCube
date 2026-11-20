@@ -1,0 +1,187 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Workaround for the absence of sizeof operator in HLSL
+#define SIZEOF_UINT 4
+#define SIZEOF_FLOAT2 8
+#define SIZEOF_FLOAT3 12
+
+//Static Global
+StructuredBuffer<uint2> EdgeIndexTable;
+StructuredBuffer<uint> EdgeTable;
+StructuredBuffer<uint3> CornerTable;
+
+StructuredBuffer<uint2> TriangleTable;
+
+int IsoLevel = 128;
+
+//Input
+float CubeSize;
+uint ChunkSize = 8;
+uint FieldSize = 8 + 1;
+
+StructuredBuffer<int> DensityBuffer;
+StructuredBuffer<int> MaterialBuffer;
+
+//Output
+RWByteAddressBuffer VertexBuffer;
+RWByteAddressBuffer NormalBuffer;
+RWByteAddressBuffer IndexBuffer;
+RWByteAddressBuffer UVBuffer;
+RWByteAddressBuffer UV1Buffer;
+//RWByteAddressBuffer ColorBuffer;
+
+
+RWStructuredBuffer<uint> VertexCounter;
+
+float rand(float2 co)
+{
+    return (frac(sin(dot(co.xy, float2(13.3337, 117.117))) * 35485.70336)) * 1;
+}
+
+float3 InterpolateVertices(float3 p1, float3 p2, float t)
+{
+    return p1 + t * (p2 - p1);
+}
+
+float LinearInterpolationFactor(float3 vertexPositions[8], int cube[8], uint2 edge)
+{
+    float v1 = cube[edge.x];
+    float v2 = cube[edge.y];
+
+    float denom = v2 - v1;
+    if (abs(denom) < 0.00001f)
+        return 0.5f;
+
+    return ((float) IsoLevel - v1) / denom;
+}
+
+int InterpolateBytes(int mat1, int mat2, float t)
+{
+    return (t < 0.5f ? mat1 : mat2);
+}
+
+uint EdgeIndexFromTriangleTable(uint2 data, uint index)
+{
+    return 0xfu & (index < 8 ? data.x >> ((index + 0) * 4) :
+                               data.y >> ((index - 8) * 4));
+}
+
+float2 CalcUV(float3 v, float3 n)
+{
+    if (n.y >= n.x && n.y >= n.z)
+        return v.xz;
+    else if (n.x >= n.y && n.x >= n.z)
+        return v.zy;
+    else
+        return v.xy;
+}
+
+void MarchCube(float3 vertexPositions[8], int cube[8], uint materialCube[8])
+{
+    uint cubeIndex = 0;
+    for (int i = 0; i < 8; i++)
+    {
+        //if (cube[i] <= IsoLevel)
+        //{
+        //    cubeIndex |= (1 << i); // bitmask for inside/outside evaluation
+        //}
+        cubeIndex |= (cube[i] < IsoLevel) << i;
+    }
+
+    if (cubeIndex == 0 || cubeIndex == 0xff)
+    {
+        return;
+    }
+    
+    uint2 edges = TriangleTable[cubeIndex];;
+
+    for (i = 0; i < 15; i += 3)
+    {
+        uint e1 = EdgeIndexFromTriangleTable(edges, i);
+        uint e2 = EdgeIndexFromTriangleTable(edges, i + 1);
+        uint e3 = EdgeIndexFromTriangleTable(edges, i + 2);
+        if (e1 == 15)
+            return;
+     
+        int2 edge1 = EdgeIndexTable[e1];
+        int2 edge2 = EdgeIndexTable[e2];
+        int2 edge3 = EdgeIndexTable[e3];
+        
+        float t1 = LinearInterpolationFactor(vertexPositions, cube, edge1);
+        float t2 = LinearInterpolationFactor(vertexPositions, cube, edge2);
+        float t3 = LinearInterpolationFactor(vertexPositions, cube, edge3);
+        
+        float3 v1 = InterpolateVertices(vertexPositions[edge1.x], vertexPositions[edge1.y], t1);
+        float3 v2 = InterpolateVertices(vertexPositions[edge2.x], vertexPositions[edge2.y], t2);
+        float3 v3 = InterpolateVertices(vertexPositions[edge3.x], vertexPositions[edge3.y], t3);
+        
+        int c1 = max(materialCube[edge1.x], materialCube[edge1.y]);
+        int c2 = max(materialCube[edge2.x], materialCube[edge2.y]);
+        int c3 = max(materialCube[edge3.x], materialCube[edge3.y]);
+        int mindex = max(c1, max(c2, c3));
+        //int c1 = InterpolateBytes(materialCube[edge1.x], materialCube[edge1.y], t1);
+        //int c2 = InterpolateBytes(materialCube[edge2.x], materialCube[edge2.y], t2);
+        //int c3 = InterpolateBytes(materialCube[edge3.x], materialCube[edge3.y], t3);
+        
+        float3 n1 = v2 - v1;
+        float3 n2 = v3 - v1;
+        float3 n = cross(n1, n2);
+        float len = length(n);
+        float3 normal = len > 0.00001f ? n / len : float3(0, 1, 0);
+        
+        uint count = VertexCounter.IncrementCounter();
+        uint vidx = count * 3;
+        
+        VertexBuffer.Store3((vidx + 0) * SIZEOF_FLOAT3, asuint(v1));
+        VertexBuffer.Store3((vidx + 1) * SIZEOF_FLOAT3, asuint(v2));
+        VertexBuffer.Store3((vidx + 2) * SIZEOF_FLOAT3, asuint(v3));
+        
+        NormalBuffer.Store3((vidx + 0) * SIZEOF_FLOAT3, asuint(normal));
+        NormalBuffer.Store3((vidx + 1) * SIZEOF_FLOAT3, asuint(normal));
+        NormalBuffer.Store3((vidx + 2) * SIZEOF_FLOAT3, asuint(normal));
+
+        IndexBuffer.Store((vidx + 0) * SIZEOF_UINT, vidx + 0);
+        IndexBuffer.Store((vidx + 1) * SIZEOF_UINT, vidx + 1);
+        IndexBuffer.Store((vidx + 2) * SIZEOF_UINT, vidx + 2);
+        
+        float3 an = abs(normal);
+
+        float2 uv1 = CalcUV(v1, an);
+        float2 uv2 = CalcUV(v2, an);
+        float2 uv3 = CalcUV(v3, an);
+        
+        UVBuffer.Store2((vidx + 0) * SIZEOF_FLOAT2, asuint(uv1));
+        UVBuffer.Store2((vidx + 1) * SIZEOF_FLOAT2, asuint(uv2));
+        UVBuffer.Store2((vidx + 2) * SIZEOF_FLOAT2, asuint(uv3));
+       
+        UV1Buffer.Store2((vidx + 0) * SIZEOF_FLOAT2, asuint(float2(mindex, 1)));
+        UV1Buffer.Store2((vidx + 1) * SIZEOF_FLOAT2, asuint(float2(mindex, 1))); //TODO fix smoothing
+        UV1Buffer.Store2((vidx + 2) * SIZEOF_FLOAT2, asuint(float2(mindex, 1)));
+        
+        //ColorBuffer.Store2((vidx + 0) * 32, asuint(float2(c1, uv11)));
+        //ColorBuffer.Store2((vidx + 1) * 32, asuint(float2(c1, uv11)));
+        //ColorBuffer.Store2((vidx + 2) * 32, asuint(float2(c1, uv11)));
+    }
+}
+
+[numthreads(4, 4, 4)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= ChunkSize || id.y >= ChunkSize || id.z >= ChunkSize)
+        return;
+    
+    int cube[8];
+    uint materialCube[8];
+    float3 vertexPositions[8];
+    int3 pos = int3(id.x, id.y, id.z);
+    for (int i = 0; i < 8; i++)
+    {
+        uint3 corner = pos + CornerTable[i];
+        uint voxelIndex = corner.x + corner.y * FieldSize + corner.z * FieldSize * FieldSize;
+        cube[i] = DensityBuffer[voxelIndex];
+        materialCube[i] = MaterialBuffer[voxelIndex];
+        vertexPositions[i] = corner * CubeSize;
+    }
+    MarchCube(vertexPositions, cube, materialCube);
+}

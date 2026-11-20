@@ -1,0 +1,182 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21844b263fa3198469b6bfdbad12249a, type: 3}
+  m_Name: UpgradeTree
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeTreeDefinition
+  nodes:
+  - nodeId: starter
+    category: 0
+    prerequisiteNodeIds: []
+    mapPosition: {x: 0, y: 0}
+    title: STARTER DRILL
+    description: Your starting mining tool.
+    effectType: 0
+    effectAmountPerLevel: 0
+    startingLevel: 1
+    maxLevel: 1
+    levelCosts: 00000000i
+  - nodeId: drill_power
+    category: 0
+    prerequisiteNodeIds:
+    - starter
+    mapPosition: {x: -180, y: 150}
+    title: DRILL POWER
+    description: Increase damage dealt to the cube.
+    effectType: 0
+    effectAmountPerLevel: 0.15
+    startingLevel: 0
+    maxLevel: 5
+    levelCosts: 020000000300000005000000080000000c000000i
+  - nodeId: rapid_fire
+    category: 0
+    prerequisiteNodeIds:
+    - starter
+    mapPosition: {x: -180, y: -150}
+    title: RAPID FIRE
+    description: Reduce the delay between shots.
+    effectType: 2
+    effectAmountPerLevel: 0.12
+    startingLevel: 0
+    maxLevel: 5
+    levelCosts: 020000000400000006000000090000000d000000i
+  - nodeId: projectile_volley
+    category: 0
+    prerequisiteNodeIds:
+    - drill_power
+    mapPosition: {x: -350, y: 240}
+    title: PROJECTILE VOLLEY
+    description: Add another projectile to each shot.
+    effectType: 1
+    effectAmountPerLevel: 1
+    startingLevel: 0
+    maxLevel: 5
+    levelCosts: 0200000004000000070000000a0000000f000000i
+  - nodeId: cart_drive
+    category: 1
+    prerequisiteNodeIds:
+    - starter
+    mapPosition: {x: 180, y: 0}
+    title: CART DRIVE
+    description: Increase cart speed while pursuing resources.
+    effectType: 4
+    effectAmountPerLevel: 0.2
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 08000000i
+  - nodeId: resource_bonus
+    category: 2
+    prerequisiteNodeIds:
+    - rapid_fire
+    mapPosition: {x: -500, y: -360}
+    title: RESOURCE BONUS
+    description: Increase the currency value of collected drops.
+    effectType: 3
+    effectAmountPerLevel: 0.2
+    startingLevel: 0
+    maxLevel: 20
+    levelCosts: 03000000040000000500000006000000080000000a0000000c0000000f00000012000000160000001a0000001f000000250000002c000000340000003d00000047000000520000005e0000006c000000i
+  - nodeId: burst_mode
+    category: 0
+    prerequisiteNodeIds:
+    - rapid_fire
+    mapPosition: {x: -350, y: -240}
+    title: BURST MODE
+    description: Add two projectiles to each shot.
+    effectType: 1
+    effectAmountPerLevel: 2
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 0a000000i
+  - nodeId: power_core
+    category: 0
+    prerequisiteNodeIds:
+    - projectile_volley
+    mapPosition: {x: -500, y: 360}
+    title: POWER CORE
+    description: Further increase mining damage.
+    effectType: 0
+    effectAmountPerLevel: 0.2
+    startingLevel: 0
+    maxLevel: 5
+    levelCosts: 04000000080000000e000000140000001e000000i
+  - nodeId: cart_zoomies
+    category: 1
+    prerequisiteNodeIds:
+    - cart_drive
+    mapPosition: {x: 340, y: 130}
+    title: CART ZOOMIES
+    description: The cart stops pursuing resources and tears around in fast, constantly changing random directions.
+    effectType: 5
+    effectAmountPerLevel: 2.5
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 06000000i
+  - nodeId: ufo_beam
+    category: 3
+    prerequisiteNodeIds:
+    - power_core
+    mapPosition: {x: 500, y: 240}
+    title: ABDUCTION BEAM
+    description: UFOs periodically fire a high-damage beam into the cube.
+    effectType: 6
+    effectAmountPerLevel: 220
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 14000000i
+  - nodeId: cart_cannon
+    category: 1
+    prerequisiteNodeIds:
+    - cart_drive
+    mapPosition: {x: 500, y: -240}
+    title: REAR CANNON
+    description: Mount a cannon on the back of the cart that aims and fires at the cube.
+    effectType: 8
+    effectAmountPerLevel: 2
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 0c000000i
+  - nodeId: magnet_field
+    category: 4
+    prerequisiteNodeIds:
+    - starter
+    mapPosition: {x: 0, y: 180}
+    title: CURSOR MAGNET
+    description: Unlock the right-mouse-button magnet and its starting radius.
+    effectType: 7
+    effectAmountPerLevel: 8
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 03000000i
+  - nodeId: magnet_range
+    category: 4
+    prerequisiteNodeIds:
+    - magnet_field
+    mapPosition: {x: 0, y: 360}
+    title: MAGNET RADIUS
+    description: Increase the cursor magnet's radius.
+    effectType: 9
+    effectAmountPerLevel: 4
+    startingLevel: 0
+    maxLevel: 5
+    levelCosts: 0400000006000000090000000d00000012000000i
+  - nodeId: magnet_pull_speed
+    category: 4
+    prerequisiteNodeIds:
+    - magnet_field
+    mapPosition: {x: 180, y: 360}
+    title: MAGNET FORCE
+    description: Increase the cursor magnet's pull speed.
+    effectType: 10
+    effectAmountPerLevel: 2
+    startingLevel: 0
+    maxLevel: 5
+    levelCosts: 0400000006000000090000000d00000012000000i

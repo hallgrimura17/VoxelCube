@@ -1,0 +1,123 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94d740a3b378de3428fbdbafe1f75085, type: 3}
+  m_Name: DigGameMaterialArray
+  m_EditorClassIdentifier: 
+  Materials:
+  - {fileID: 2100000, guid: 6259a97ba65dcbb488ab88764c80299a, type: 2}
+  - {fileID: 2100000, guid: 199e72897b0268d47ba11f0dbf1cdbed, type: 2}
+  - {fileID: 2100000, guid: ba11a3a458575134083ab9197c43f430, type: 2}
+  - {fileID: 2100000, guid: 4bde82db4adb7234ca4113fc02a6493d, type: 2}
+  - {fileID: 2100000, guid: 65748f614dbc04f4e92cb5a782029ffc, type: 2}
+  - {fileID: 2100000, guid: eda8d4c3554519c439ae6dca385f5195, type: 2}
+  - {fileID: 2100000, guid: 83e538dee01dd2e409d397edf7f52a6f, type: 2}
+  - {fileID: 2100000, guid: 6ef71153a7a74104cb0a9d5243bd168d, type: 2}
+  - {fileID: 2100000, guid: 4138877e0958ce1419a3dd694744ef25, type: 2}
+  WhiteDefaultTexture: {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  BlackDefaultTexture: {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  NormalDefaultTexture: {fileID: 2800000, guid: c87a2d53f20cfe848ba92cda4f464585, type: 3}
+  HeightDefaultTexture: {fileID: 2800000, guid: 584215c1f5eb2f2469a598bfac725044, type: 3}
+  OcclusionTextures:
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  DiffuseTextures:
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  EmmissiveTextures:
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  HeightTextures:
+  - {fileID: 2800000, guid: 584215c1f5eb2f2469a598bfac725044, type: 3}
+  - {fileID: 2800000, guid: 584215c1f5eb2f2469a598bfac725044, type: 3}
+  - {fileID: 2800000, guid: 584215c1f5eb2f2469a598bfac725044, type: 3}
+  - {fileID: 2800000, guid: 584215c1f5eb2f2469a598bfac725044, type: 3}
+  - {fileID: 2800000, guid: 584215c1f5eb2f2469a598bfac725044, type: 3}
+  - {fileID: 2800000, guid: 584215c1f5eb2f2469a598bfac725044, type: 3}
+  - {fileID: 2800000, guid: 584215c1f5eb2f2469a598bfac725044, type: 3}
+  - {fileID: 2800000, guid: 584215c1f5eb2f2469a598bfac725044, type: 3}
+  - {fileID: 2800000, guid: 584215c1f5eb2f2469a598bfac725044, type: 3}
+  MetallicTextures:
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  - {fileID: 2800000, guid: f6db49b700dc66b468461deab1d28ea7, type: 3}
+  NormalTextures:
+  - {fileID: 2800000, guid: c87a2d53f20cfe848ba92cda4f464585, type: 3}
+  - {fileID: 2800000, guid: c87a2d53f20cfe848ba92cda4f464585, type: 3}
+  - {fileID: 2800000, guid: c87a2d53f20cfe848ba92cda4f464585, type: 3}
+  - {fileID: 2800000, guid: c87a2d53f20cfe848ba92cda4f464585, type: 3}
+  - {fileID: 2800000, guid: c87a2d53f20cfe848ba92cda4f464585, type: 3}
+  - {fileID: 2800000, guid: c87a2d53f20cfe848ba92cda4f464585, type: 3}
+  - {fileID: 2800000, guid: c87a2d53f20cfe848ba92cda4f464585, type: 3}
+  - {fileID: 2800000, guid: c87a2d53f20cfe848ba92cda4f464585, type: 3}
+  - {fileID: 2800000, guid: c87a2d53f20cfe848ba92cda4f464585, type: 3}
+  BaseTextureMultiplier:
+  - {r: 0.35294113, g: 0.454902, b: 0.29803917, a: 1}
+  - {r: 0.45283008, g: 0.34421495, b: 0.2114631, a: 1}
+  - {r: 0.72156864, g: 0.45098037, b: 0.19999993, a: 1}
+  - {r: 0.33333328, g: 0.33333328, b: 0.33333328, a: 1}
+  - {r: 0.8980392, g: 0.75686276, b: 0.345098, a: 1}
+  - {r: 0, g: 1, b: 0.9921568, a: 1}
+  - {r: 0.7153453, g: 0, b: 1, a: 1}
+  - {r: 0, g: 0.17089075, b: 1, a: 1}
+  - {r: 1, g: 0.396645, b: 0, a: 1}
+  MetallicMultiplier:
+  - {r: 0.135, g: 0.135, b: 0.135, a: 0}
+  - {r: 0.29, g: 0.29, b: 0.29, a: 0}
+  - {r: 1, g: 1, b: 1, a: 0.6}
+  - {r: 0.85, g: 0.85, b: 0.85, a: 0.5}
+  - {r: 1, g: 1, b: 1, a: 0.7}
+  - {r: 0.85, g: 0.85, b: 0.85, a: 0.7}
+  - {r: 1, g: 1, b: 1, a: 0.7}
+  - {r: 1, g: 1, b: 1, a: 0.7}
+  - {r: 1, g: 1, b: 1, a: 0.7}
+  EmissionMultiplier:
+  - {r: 0, g: 0, b: 0, a: 1}
+  - {r: 0, g: 0, b: 0, a: 1}
+  - {r: 0, g: 0, b: 0, a: 1}
+  - {r: 0, g: 0, b: 0, a: 1}
+  - {r: 0, g: 0, b: 0, a: 1}
+  - {r: 0, g: 0, b: 0, a: 1}
+  - {r: 0.49056607, g: 0, b: 0.23372504, a: 1}
+  - {r: 0, g: 0.20177703, b: 1.4980391, a: 1}
+  - {r: 1.4980394, g: 0.1147705, b: 0, a: 1}
+  SmoothnessTextureSource: 000000000000000000000000000000000000000000000000000000000000000000000000
+  OutputPath: Assets/VoxelEngine/VoxelMaterial
+  FinalName: DigGameMaterialArray
+  TargetMaterial: {fileID: 2100000, guid: 6f5448b55509894449706956fa284042, type: 2}
+  UseMaterialPath: 1
