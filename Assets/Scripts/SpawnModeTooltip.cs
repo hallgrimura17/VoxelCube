@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 /// <summary>Displays the firing mode when its UI control is hovered.</summary>
-public class SpawnModeTooltip : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class SpawnModeTooltip : MonoBehaviour
 {
     private const string CameraModeText = "FIRING MODE: From Camera";
     private const string CenterModeText = "FIRING MODE: Through Center";
@@ -31,11 +31,9 @@ public class SpawnModeTooltip : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        UIController.Instance.ShowSpawnModeTooltip();
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        UIController.Instance.HideSpawnModeTooltip();
     }
 }

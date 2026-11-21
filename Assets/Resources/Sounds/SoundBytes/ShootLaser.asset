@@ -15,5 +15,5 @@ MonoBehaviour:
   clips:
   - {fileID: 8300000, guid: 7716a5fe9d0e5be4a8f79b77ed55bea8, type: 3}
   PitchData: {fileID: 11400000, guid: 60524767ffd516146a802acbdf943528, type: 2}
-  Priority: 50
+  Priority: 20
   Volume: 1

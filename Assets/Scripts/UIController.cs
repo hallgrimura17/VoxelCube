@@ -8,15 +8,17 @@ using UnityEngine.UI;
 /// <summary>Owns shared UI references and exposes UI operations to gameplay systems.</summary>
 public class UIController : MonoBehaviour
 {
-    private const string CameraModeText = "FIRING MODE: From Camera";
-    private const string CenterModeText = "FIRING MODE: Through Center";
+    private const float CurrencyPulseDuration = 0.2f;
+    private const float CurrencyPulseScale = 1.2f;
+    private static readonly Color CurrencyColor = new(1f, 0.82f, 0.2f, 1f);
     public static UIController Instance { get; private set; }
     [SerializeField] private TMP_Text currencyText;
     [SerializeField] private TMP_Text soulCoreCountText;
     [SerializeField] private SoulCoreCreatureUIReferences[] soulCoreCreatures;
     [SerializeField] private Image spawnModeIcon;
-    [SerializeField] private SpawnModeTooltip spawnModeTooltip;
     private readonly HashSet<GameObject> openPanels = new();
+    private Vector3 currencyCounterBaseScale;
+    private float currencyPulseTime;
 
     public bool IsGameplayInputBlocked => openPanels.Count > 0 || EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
     public bool SpawnFromCamera { get; private set; } = true;
@@ -24,12 +26,34 @@ public class UIController : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        currencyCounterBaseScale = currencyText.rectTransform.localScale;
+        currencyText.color = CurrencyColor;
         foreach (var creatureUI in soulCoreCreatures)
         {
             creatureUI.summonButton.interactable = false;
             creatureUI.unsummonButton.interactable = false;
             creatureUI.abilityButton.gameObject.SetActive(false);
         }
+    }
+
+    private void Update()
+    {
+        if (currencyPulseTime <= 0f) return;
+        currencyPulseTime = Mathf.Max(0f, currencyPulseTime - Time.deltaTime);
+        var progress = 1f - currencyPulseTime / CurrencyPulseDuration;
+        currencyText.rectTransform.localScale = currencyCounterBaseScale * Mathf.Lerp(CurrencyPulseScale, 1f, progress);
+    }
+
+    /// <summary>Returns the currency counter's screen position for reward animations.</summary>
+    public Vector2 GetCurrencyCounterScreenPosition()
+    {
+        return RectTransformUtility.WorldToScreenPoint(null, currencyText.rectTransform.position);
+    }
+
+    /// <summary>Triggers a brief scale pulse when a reward reaches the currency counter.</summary>
+    public void PulseCurrencyCounter()
+    {
+        currencyPulseTime = CurrencyPulseDuration;
     }
 
     /// <summary>Registers or unregisters a panel as blocking gameplay input.</summary>
@@ -42,7 +66,8 @@ public class UIController : MonoBehaviour
     /// <summary>Displays the current currency and refreshes currency-dependent UI.</summary>
     public void RefreshCurrency(int currency)
     {
-        currencyText.text = $"{currency:N0}";
+        currencyText.text = $"${currency:N0}";
+        currencyText.color = CurrencyColor;
         UpgradeTreeController.Instance.RefreshNodes();
     }
 
@@ -91,19 +116,6 @@ public class UIController : MonoBehaviour
     {
         SpawnFromCamera = spawnFromCamera;
         spawnModeIcon.color = spawnFromCamera ? Color.white : Color.gray;
-        spawnModeTooltip.RefreshModeText(spawnFromCamera);
-    }
-
-    /// <summary>Shows the firing-mode tooltip with the current mode.</summary>
-    public void ShowSpawnModeTooltip()
-    {
-        spawnModeTooltip.Show(SpawnFromCamera);
-    }
-
-    /// <summary>Hides the firing-mode tooltip.</summary>
-    public void HideSpawnModeTooltip()
-    {
-        spawnModeTooltip.Hide();
     }
 
     private SoulCoreCreatureUIReferences FindSoulCoreCreatureUI(string creatureId)

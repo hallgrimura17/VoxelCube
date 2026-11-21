@@ -8,6 +8,11 @@ public abstract class PlayerTool : MonoBehaviour
     public abstract bool IsUnlocked { get; }
     public bool IsSelected { get; private set; }
 
+    /// <summary>Toggles this tool's active mode when it supports multiple modes.</summary>
+    public virtual void ToggleMode()
+    {
+    }
+
     /// <summary>Sets whether this tool is the currently selected player tool.</summary>
     public void SetSelected(bool selected)
     {

@@ -20,7 +20,7 @@ public partial struct CubeResourceAttractionSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         var target = SystemAPI.GetSingleton<CubeResourceAttractionTarget>();
-        if (target.RangeSquared <= 0f || target.PullSpeed <= 0f) return;
+        if ((target.RangeSquared <= 0f && target.TargetEntity == Entity.Null) || target.PullSpeed <= 0f) return;
         state.Dependency = new CubeResourceAttractionJob { Target = target }.ScheduleParallel(state.Dependency);
     }
 }
@@ -29,12 +29,20 @@ public partial struct CubeResourceAttractionSystem : ISystem
 [WithNone(typeof(Prefab))]
 public partial struct CubeResourceAttractionJob : IJobEntity
 {
+    private const float SelectModeApproachGain = 6f;
     public CubeResourceAttractionTarget Target;
 
-    public void Execute(in CubeResource resource, in LocalTransform transform, ref PhysicsVelocity velocity)
+    public void Execute(Entity entity, in CubeResource resource, in LocalTransform transform, ref PhysicsVelocity velocity)
     {
         var offset = Target.Position - transform.Position;
-        if (Unity.Mathematics.math.lengthsq(offset) > Target.RangeSquared) return;
+        if (Target.TargetEntity != Entity.Null)
+        {
+            if (entity != Target.TargetEntity) return;
+            var distance = Unity.Mathematics.math.length(offset);
+            velocity.Linear = Unity.Mathematics.math.normalizesafe(offset) * Unity.Mathematics.math.min(Target.PullSpeed, distance * SelectModeApproachGain);
+            return;
+        }
+        if (Target.RangeSquared <= 0f || Unity.Mathematics.math.lengthsq(offset) > Target.RangeSquared) return;
         velocity.Linear = Unity.Mathematics.math.normalizesafe(offset) * Target.PullSpeed;
     }
 }
@@ -52,10 +60,12 @@ public partial class CubeResourceMergeSystem : SystemBase
     private const float MergePitchPerTier = 0.08f;
     private readonly List<CubeResourceMergeCandidate> candidates = new();
     private readonly HashSet<Entity> handledEntities = new();
+    private EntityQuery attractionTargetQuery;
 
     protected override void OnCreate()
     {
         RequireForUpdate<SimulationSingleton>();
+        attractionTargetQuery = GetEntityQuery(ComponentType.ReadOnly<CubeResourceAttractionTarget>());
     }
 
     protected override void OnUpdate()
@@ -76,13 +86,14 @@ public partial class CubeResourceMergeSystem : SystemBase
 
         candidates.Sort(CompareCandidates);
         handledEntities.Clear();
+        var selectedEntity = EntityManager.GetComponentData<CubeResourceAttractionTarget>(attractionTargetQuery.GetSingletonEntity()).TargetEntity;
         var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
-        for (var index = 0; index < candidates.Count; index++) Merge(candidates[index], commandBuffer);
+        for (var index = 0; index < candidates.Count; index++) Merge(candidates[index], commandBuffer, selectedEntity);
         commandBuffer.Playback(EntityManager);
         commandBuffer.Dispose();
     }
 
-    private void Merge(CubeResourceMergeCandidate candidate, EntityCommandBuffer commandBuffer)
+    private void Merge(CubeResourceMergeCandidate candidate, EntityCommandBuffer commandBuffer, Entity selectedEntity)
     {
         var entityA = candidate.EntityA;
         var entityB = candidate.EntityB;
@@ -97,7 +108,7 @@ public partial class CubeResourceMergeSystem : SystemBase
         var transformB = EntityManager.GetComponentData<LocalTransform>(entityB);
         var velocityA = EntityManager.GetComponentData<PhysicsVelocity>(entityA);
         var velocityB = EntityManager.GetComponentData<PhysicsVelocity>(entityB);
-        var survivor = entityA.Index < entityB.Index ? entityA : entityB;
+        var survivor = entityA == selectedEntity ? entityA : entityB == selectedEntity ? entityB : entityA.Index < entityB.Index ? entityA : entityB;
         var consumed = survivor == entityA ? entityB : entityA;
         var resource = survivor == entityA ? resourceA : resourceB;
         resource.Tier++;
@@ -111,6 +122,9 @@ public partial class CubeResourceMergeSystem : SystemBase
         EntityManager.SetComponentData(survivor, resource);
         var tierColor = CubeResourceEntityFactory.GetTierColor(resource.Tier);
         EntityManager.SetComponentData(survivor, new URPMaterialPropertyBaseColor { Value = tierColor });
+        EntityManager.SetComponentData(survivor, new URPMaterialPropertyEmissionColor { Value = Unity.Mathematics.float4.zero });
+        EntityManager.SetComponentData(survivor, new CubeResourceVaporisingHeat { Progress = 0f });
+        EntityManager.SetComponentEnabled<CubeResourceVaporisingHeatActive>(survivor, false);
         EntityManager.SetComponentData(survivor, new PhysicsVelocity
         {
             Linear = (velocityA.Linear + velocityB.Linear) * 0.5f,

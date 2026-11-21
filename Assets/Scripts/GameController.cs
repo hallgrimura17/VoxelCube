@@ -1,5 +1,6 @@
 using Assets.Resources;
 using System.Collections.Generic;
+using Unity.Entities;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
@@ -54,14 +55,20 @@ public class GameController : MonoBehaviour
         CubeResourceEntityFactory.SpawnResources(modifications, CubeOffset, Vector3.zero, CubeOffset, resourceSpawnImpulse * pushMultiplier, resourceCubeCenterPushImpulse * pushMultiplier);
     }
 
-    internal void SetResourceAttraction(Vector3 destination, float range, float pullSpeed)
+    internal void SpawnCollapseResource(VoxelModification modification, Vector3 launchDirection, float impulseMultiplier)
     {
-        CubeResourceEntityFactory.SetResourceAttraction(destination, range, pullSpeed);
+        var pushMultiplier = disconnectedResourcePushMultiplier * impulseMultiplier;
+        CubeResourceEntityFactory.SpawnCollapseResource(modification, launchDirection, resourceSpawnImpulse * pushMultiplier);
+    }
+
+    internal void SetResourceAttraction(Entity targetEntity, Vector3 destination, float range, float pullSpeed)
+    {
+        CubeResourceEntityFactory.SetResourceAttraction(targetEntity, destination, range, pullSpeed);
     }
 
     internal void ClearResourceAttraction()
     {
-        CubeResourceEntityFactory.SetResourceAttraction(Vector3.zero, 0f, 0f);
+        CubeResourceEntityFactory.SetResourceAttraction(Entity.Null, Vector3.zero, 0f, 0f);
     }
 
     /// <summary>Unlocks and enters the next prestige after completing the current highest unlocked level.</summary>

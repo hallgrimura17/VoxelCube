@@ -150,9 +150,9 @@ MonoBehaviour:
     - starter
     mapPosition: {x: 0, y: 180}
     title: CURSOR MAGNET
-    description: Unlock the right-mouse-button magnet and its starting radius.
+    description: Unlock the magnet; click a cube to pull it.
     effectType: 7
-    effectAmountPerLevel: 8
+    effectAmountPerLevel: 0
     startingLevel: 0
     maxLevel: 1
     levelCosts: 03000000i

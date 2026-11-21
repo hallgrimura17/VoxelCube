@@ -19,12 +19,14 @@ public class BlasterTool : PlayerTool
     private const float MinOrbitPitch = -80f;
     private const float MaxOrbitPitch = 80f;
     private const float CameraSurfacePadding = 5f;
+    private const float CameraOriginVerticalOffset = 0.5f;
     private const float MinimumCameraDistance = 0.05f;
     [SerializeField] private float zoomSensitivity = 0.01f;
     private const int GroundLayerIndex = 3;
     private const int VoxelLayerIndex = 7;
     [SerializeField] private LayerMask cameraCollisionLayers = (1 << GroundLayerIndex) | (1 << VoxelLayerIndex);
     private Camera mainCamera;
+    private Transform playerCameraTransform;
     private Transform cameraPivot;
     private float orbitYaw;
     private float orbitPitch;
@@ -39,11 +41,12 @@ public class BlasterTool : PlayerTool
     {
         shootAudios = GetComponent<AudioSource>();
         UIController.Instance.SetSpawnMode(SpawnFromCamera);
-        cameraPivot = transform.parent;
+        playerCameraTransform = transform.parent;
+        cameraPivot = playerCameraTransform.parent;
         var rotation = cameraPivot.eulerAngles;
         orbitYaw = rotation.y;
         orbitPitch = rotation.x > 180f ? rotation.x - 360f : rotation.x;
-        desiredCameraDistance = Mathf.Max(MinimumCameraDistance, -transform.localPosition.z);
+        desiredCameraDistance = Mathf.Max(MinimumCameraDistance, -playerCameraTransform.localPosition.z);
         defaultCameraDistance = desiredCameraDistance;
     }
 
@@ -82,28 +85,41 @@ public class BlasterTool : PlayerTool
         var rayOrigin = cameraPivot.position + cameraDirection * defaultCameraDistance;
         if (Physics.Raycast(rayOrigin, -cameraDirection, out var hit, defaultCameraDistance, cameraCollisionLayers, QueryTriggerInteraction.Ignore)) cameraDistance = Mathf.Max(cameraDistance, defaultCameraDistance - hit.distance + CameraSurfacePadding);
         cameraDistance = Mathf.Max(MinimumCameraDistance, cameraDistance);
-        var localPosition = transform.localPosition;
+        var localPosition = playerCameraTransform.localPosition;
         localPosition.z = -cameraDistance;
-        transform.localPosition = localPosition;
+        playerCameraTransform.localPosition = localPosition;
+    }
+
+    /// <summary>Toggles projectile spawning between the camera and the player weapon position.</summary>
+    public override void ToggleMode()
+    {
+        SetSpawnFromCamera(!SpawnFromCamera);
+    }
+
+    /// <summary>Sets projectile spawning to the camera or player weapon position.</summary>
+    public void SetSpawnFromCamera(bool spawnFromCamera)
+    {
+        SpawnFromCamera = spawnFromCamera;
+        UIController.Instance.SetSpawnMode(SpawnFromCamera);
+        ToolHotbar.Instance.RefreshModeControls();
     }
 
     /// <summary>Toggles projectile spawning between the camera and the player weapon position.</summary>
     public void ToggleSpawnFromCamera()
     {
-        SpawnFromCamera = !SpawnFromCamera;
-        UIController.Instance.SetSpawnMode(SpawnFromCamera);
+        SetSpawnFromCamera(!SpawnFromCamera);
     }
 
 
     public void ShootProjectile(int index)
     {
         var ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
-        var position = ray.origin;
+        var position = SpawnFromCamera ? ray.origin - mainCamera.transform.up * CameraOriginVerticalOffset : ray.origin;
         var direction = ray.direction;
         if (!SpawnFromCamera)
         {
-            position += direction * -transform.localPosition.z;
-            if (Physics.Raycast(ray, out RaycastHit hit, -transform.localPosition.z)) position = hit.point;
+            position += direction * -playerCameraTransform.localPosition.z;
+            if (Physics.Raycast(ray, out RaycastHit hit, -playerCameraTransform.localPosition.z)) position = hit.point;
             direction = transform.root.position - position;
             if (direction.sqrMagnitude < MinAimDirectionSqrMagnitude)
             {
@@ -112,7 +128,7 @@ public class BlasterTool : PlayerTool
             }
             else
             {
-                position += direction.normalized * transform.localPosition.z;
+                position += direction.normalized * playerCameraTransform.localPosition.z;
             }
         }
 

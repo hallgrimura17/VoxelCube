@@ -26,7 +26,9 @@ public partial class TerrainChunkManager : MonoBehaviour
     private const float DisconnectedVoxelCheckInterval = 1f;
     private const float CubeCollapseDuration = 3f;
     private const float CubeCollapseEndScale = 0.1f;
-    private const float CollapsedVoxelImpulseMultiplier = 16f;
+    private const float CollapsedVoxelImpulseMultiplier = 32f;
+    private const int CollapseDropBatchSize = 32;
+    private const float CollapseDropSpawnAreaSize = 6f;
     [SerializeField] private AnimationCurve collapseShrinkCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
     private bool prestigeGrantedForCubeClear;
     private bool isCollapsing;
@@ -234,6 +236,7 @@ public partial class TerrainChunkManager : MonoBehaviour
         SoundManager.instance.PlaySoundClipAtLocation(Chunk.transform.position, "CubeCollapse");
         var startingPosition = Chunk.transform.localPosition;
         var startingScale = Chunk.transform.localScale;
+        var originalCollapseCenter = Chunk.transform.TransformPoint((Vector3)ChunkCenterOffset);
         var centerOffset = Vector3.Scale((Vector3)ChunkCenterOffset, startingScale);
         var elapsed = 0f;
         while (elapsed < CubeCollapseDuration)
@@ -250,6 +253,8 @@ public partial class TerrainChunkManager : MonoBehaviour
         Chunk.transform.localPosition = startingPosition + Chunk.transform.localRotation * centerOffset * (1f - CubeCollapseEndScale);
         var releasedVoxels = new List<VoxelModification>(pendingCollapseVoxels);
         pendingCollapseVoxels.Clear();
+        var collapsedCenter = Chunk.transform.TransformPoint((Vector3)ChunkCenterOffset);
+        for (var index = 0; index < releasedVoxels.Count; index++) releasedVoxels[index] = ScaleCollapseVoxelPosition(releasedVoxels[index], originalCollapseCenter, collapsedCenter);
         var changed = false;
         for (var z = 0; z <= ChunkDataSize; z++)
             for (var y = 0; y <= ChunkDataSize; y++)
@@ -258,7 +263,7 @@ public partial class TerrainChunkManager : MonoBehaviour
                     var index = GetIndex(x, y, z);
                     var density = Chunk.Density[index];
                     var voxel = Chunk.Offset * ChunkDataSize + new Vector3Int(x, y, z);
-                    if (density >= IsoLevel) releasedVoxels.Add(new VoxelModification { IsoFlip = true, Density = 0, Material = Chunk.Material[index], Position = (Vector3)voxel * CubeSize });
+                    if (density >= IsoLevel) releasedVoxels.Add(new VoxelModification { IsoFlip = true, Density = 0, Material = Chunk.Material[index], Position = Chunk.transform.TransformPoint((Vector3)(voxel - Chunk.Offset * ChunkDataSize) * CubeSize) });
                     if (density == 0) continue;
                     Chunk.Density[index] = 0;
                     changed = true;
@@ -275,7 +280,7 @@ public partial class TerrainChunkManager : MonoBehaviour
             foreach (var voxel in releasedVoxels) collapsePosition += voxel.Position;
             SoundManager.instance.PlaySoundClipAtLocation(collapsePosition / releasedVoxels.Count, "VoxelCollapse");
         }
-        if (releasedVoxels.Count > 0) GameController.instance.SpawnDisconnectedResources(releasedVoxels, CollapsedVoxelImpulseMultiplier);
+        if (releasedVoxels.Count > 0) yield return SpawnCollapseDropsInBatches(releasedVoxels, collapsedCenter);
         lastDisconnectedVoxelCheckRevision = VoxelDataRevision;
         if (!prestigeGrantedForCubeClear && IsCubeCleared())
         {
@@ -284,6 +289,28 @@ public partial class TerrainChunkManager : MonoBehaviour
         }
         collapseRoutine = null;
         isCollapsing = false;
+    }
+
+    private static VoxelModification ScaleCollapseVoxelPosition(VoxelModification voxel, Vector3 originalCenter, Vector3 collapsedCenter)
+    {
+        voxel.Position = collapsedCenter + (voxel.Position - originalCenter) * CubeCollapseEndScale;
+        return voxel;
+    }
+
+    private IEnumerator SpawnCollapseDropsInBatches(List<VoxelModification> releasedVoxels, Vector3 spawnAreaCenter)
+    {
+        var halfAreaSize = CollapseDropSpawnAreaSize * 0.5f;
+        for (var startIndex = 0; startIndex < releasedVoxels.Count; startIndex += CollapseDropBatchSize)
+        {
+            var endIndex = Mathf.Min(startIndex + CollapseDropBatchSize, releasedVoxels.Count);
+            for (var index = startIndex; index < endIndex; index++)
+            {
+                var voxel = releasedVoxels[index];
+                voxel.Position = spawnAreaCenter + new Vector3(UnityEngine.Random.Range(-halfAreaSize, halfAreaSize), UnityEngine.Random.Range(-halfAreaSize, halfAreaSize), UnityEngine.Random.Range(-halfAreaSize, halfAreaSize));
+                GameController.instance.SpawnCollapseResource(voxel, UnityEngine.Random.onUnitSphere, CollapsedVoxelImpulseMultiplier);
+            }
+            if (endIndex < releasedVoxels.Count) yield return null;
+        }
     }
 
     /// <summary>Restores the single terrain chunk from its original data.</summary>

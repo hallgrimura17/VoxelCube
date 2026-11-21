@@ -13,6 +13,7 @@ public class UpgradeTooltip : MonoBehaviour
     [SerializeField] private RectTransform canvasRect;
     [SerializeField] private Vector2 pointerOffset = new (24f, 0f);
     private const float CanvasEdgePadding = 16f;
+    private static readonly Color CurrencyColor = new(1f, 0.82f, 0.2f, 1f);
 
     void Awake()
     {
@@ -26,7 +27,8 @@ public class UpgradeTooltip : MonoBehaviour
     {
         titleText.text = title;
         descriptionText.text = description;
-        priceText.text = $"COST  {price:N0}  /  OWNED {GameController.instance.currency:N0}";
+        priceText.text = $"COST  ${price:N0}  /  OWNED ${GameController.instance.currency:N0}";
+        priceText.color = CurrencyColor;
         tooltipPanel.gameObject.SetActive(true);
         tooltipShadow.SetActive(true);
         RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPosition, null, out var localPosition);

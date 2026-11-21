@@ -34,6 +34,7 @@ public static class CubeResourceEntityFactory
     private static BlobAssetReference<Unity.Physics.Collider> resourceCollider;
     private static Entity resourcePrototype;
     private static Entity attractionTarget;
+    private static Entity vaporisingBeamTarget;
     private static UnityEngine.Material resourceMaterial;
     private static World world;
 
@@ -48,6 +49,8 @@ public static class CubeResourceEntityFactory
         resourceCollider = Unity.Physics.BoxCollider.Create(new BoxGeometry { Center = float3.zero, Orientation = quaternion.identity, Size = new float3(1f), BevelRadius = 0f }, resourceFilter, physicsMaterial);
         resourcePrototype = CreatePrototype(entityManager);
         attractionTarget = entityManager.CreateEntity(typeof(CubeResourceAttractionTarget));
+        entityManager.SetComponentData(attractionTarget, new CubeResourceAttractionTarget { TargetEntity = Entity.Null });
+        vaporisingBeamTarget = entityManager.CreateEntity(typeof(CubeVaporisingBeamTarget));
         CreateEnvironmentColliders(entityManager);
     }
 
@@ -84,9 +87,24 @@ public static class CubeResourceEntityFactory
         requests.Dispose();
     }
 
-    internal static void SetResourceAttraction(Vector3 destination, float range, float pullSpeed)
+    internal static void SpawnCollapseResource(VoxelModification modification, Vector3 launchDirection, float impulseMagnitude)
     {
-        world.EntityManager.SetComponentData(attractionTarget, new CubeResourceAttractionTarget { Position = ToFloat3(destination), RangeSquared = range * range, PullSpeed = pullSpeed });
+        var entityManager = world.EntityManager;
+        var entity = entityManager.Instantiate(resourcePrototype);
+        var rotation = UnityEngine.Random.rotation;
+        var entityRotation = new quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+        entityManager.SetComponentData(entity, LocalTransform.FromPositionRotationScale(ToFloat3(modification.Position), entityRotation, ResourceScale));
+        entityManager.SetComponentData(entity, new PhysicsVelocity { Linear = ToFloat3(launchDirection.normalized * impulseMagnitude / ResourceMass), Angular = float3.zero });
+    }
+
+    internal static void SetResourceAttraction(Entity targetEntity, Vector3 destination, float range, float pullSpeed)
+    {
+        world.EntityManager.SetComponentData(attractionTarget, new CubeResourceAttractionTarget { TargetEntity = targetEntity, Position = ToFloat3(destination), RangeSquared = range * range, PullSpeed = pullSpeed });
+    }
+
+    internal static void SetVaporisingTarget(bool active, Vector3 position, float radius, float baseHeatDuration, float additionalHeatDurationPerTier, float emissionIntensity, float heatDecayDuration)
+    {
+        world.EntityManager.SetComponentData(vaporisingBeamTarget, new CubeVaporisingBeamTarget { Active = active ? 1 : 0, Position = ToFloat3(position), Radius = radius, BaseHeatDuration = baseHeatDuration, AdditionalHeatDurationPerTier = additionalHeatDurationPerTier, EmissionIntensity = emissionIntensity, HeatDecayDuration = heatDecayDuration });
     }
 
     internal static float4 GetTierColor(int tier)
@@ -114,6 +132,7 @@ public static class CubeResourceEntityFactory
             entityManager.DestroyEntity(resources);
             resources.Dispose();
             if (entityManager.Exists(attractionTarget)) entityManager.DestroyEntity(attractionTarget);
+            if (entityManager.Exists(vaporisingBeamTarget)) entityManager.DestroyEntity(vaporisingBeamTarget);
             for (var index = 0; index < environmentEntities.Count; index++)
                 if (entityManager.Exists(environmentEntities[index])) entityManager.DestroyEntity(environmentEntities[index]);
             entityManager.CompleteAllTrackedJobs();
@@ -125,6 +144,7 @@ public static class CubeResourceEntityFactory
         environmentColliders.Clear();
         resourcePrototype = Entity.Null;
         attractionTarget = Entity.Null;
+        vaporisingBeamTarget = Entity.Null;
         resourceCollider = default;
         resourceMaterial = null;
         world = null;
@@ -140,6 +160,10 @@ public static class CubeResourceEntityFactory
         entityManager.AddComponentData(entity, LocalTransform.FromPositionRotationScale(float3.zero, quaternion.identity, ResourceScale));
         entityManager.AddComponentData(entity, new LocalToWorld { Value = float4x4.identity });
         entityManager.AddComponentData(entity, new URPMaterialPropertyBaseColor { Value = GetTierColor(0) });
+        entityManager.AddComponentData(entity, new URPMaterialPropertyEmissionColor { Value = float4.zero });
+        entityManager.AddComponentData(entity, new CubeResourceVaporisingHeat { Progress = 0f });
+        entityManager.AddComponent<CubeResourceVaporisingHeatActive>(entity);
+        entityManager.SetComponentEnabled<CubeResourceVaporisingHeatActive>(entity, false);
         entityManager.AddComponentData(entity, new CubeResource());
         entityManager.AddComponentData(entity, new PhysicsCollider { Value = resourceCollider });
         entityManager.AddComponentData(entity, CreateResourceMass(0));
