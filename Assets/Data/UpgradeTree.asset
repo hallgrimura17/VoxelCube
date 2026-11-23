@@ -15,8 +15,8 @@ MonoBehaviour:
   nodes:
   - nodeId: starter
     category: 0
+    direction: 0
     prerequisiteNodeIds: []
-    mapPosition: {x: 0, y: 0}
     title: STARTER DRILL
     description: Your starting mining tool.
     effectType: 0
@@ -26,9 +26,9 @@ MonoBehaviour:
     levelCosts: 00000000i
   - nodeId: drill_power
     category: 0
+    direction: 0
     prerequisiteNodeIds:
     - starter
-    mapPosition: {x: -180, y: 150}
     title: DRILL POWER
     description: Increase damage dealt to the cube.
     effectType: 0
@@ -38,9 +38,9 @@ MonoBehaviour:
     levelCosts: 020000000300000005000000080000000c000000i
   - nodeId: rapid_fire
     category: 0
+    direction: 0
     prerequisiteNodeIds:
     - starter
-    mapPosition: {x: -180, y: -150}
     title: RAPID FIRE
     description: Reduce the delay between shots.
     effectType: 2
@@ -50,9 +50,9 @@ MonoBehaviour:
     levelCosts: 020000000400000006000000090000000d000000i
   - nodeId: projectile_volley
     category: 0
+    direction: 0
     prerequisiteNodeIds:
     - drill_power
-    mapPosition: {x: -350, y: 240}
     title: PROJECTILE VOLLEY
     description: Add another projectile to each shot.
     effectType: 1
@@ -62,9 +62,9 @@ MonoBehaviour:
     levelCosts: 0200000004000000070000000a0000000f000000i
   - nodeId: cart_drive
     category: 1
+    direction: 2
     prerequisiteNodeIds:
     - starter
-    mapPosition: {x: 180, y: 0}
     title: CART DRIVE
     description: Increase cart speed while pursuing resources.
     effectType: 4
@@ -74,9 +74,9 @@ MonoBehaviour:
     levelCosts: 08000000i
   - nodeId: resource_bonus
     category: 2
+    direction: 3
     prerequisiteNodeIds:
     - rapid_fire
-    mapPosition: {x: -500, y: -360}
     title: RESOURCE BONUS
     description: Increase the currency value of collected drops.
     effectType: 3
@@ -86,9 +86,9 @@ MonoBehaviour:
     levelCosts: 03000000040000000500000006000000080000000a0000000c0000000f00000012000000160000001a0000001f000000250000002c000000340000003d00000047000000520000005e0000006c000000i
   - nodeId: burst_mode
     category: 0
+    direction: 0
     prerequisiteNodeIds:
     - rapid_fire
-    mapPosition: {x: -350, y: -240}
     title: BURST MODE
     description: Add two projectiles to each shot.
     effectType: 1
@@ -98,9 +98,9 @@ MonoBehaviour:
     levelCosts: 0a000000i
   - nodeId: power_core
     category: 0
+    direction: 0
     prerequisiteNodeIds:
     - projectile_volley
-    mapPosition: {x: -500, y: 360}
     title: POWER CORE
     description: Further increase mining damage.
     effectType: 0
@@ -110,9 +110,9 @@ MonoBehaviour:
     levelCosts: 04000000080000000e000000140000001e000000i
   - nodeId: cart_zoomies
     category: 1
+    direction: 1
     prerequisiteNodeIds:
     - cart_drive
-    mapPosition: {x: 340, y: 130}
     title: CART ZOOMIES
     description: The cart stops pursuing resources and tears around in fast, constantly changing random directions.
     effectType: 5
@@ -122,9 +122,9 @@ MonoBehaviour:
     levelCosts: 06000000i
   - nodeId: ufo_beam
     category: 3
+    direction: 0
     prerequisiteNodeIds:
     - power_core
-    mapPosition: {x: 500, y: 240}
     title: ABDUCTION BEAM
     description: UFOs periodically fire a high-damage beam into the cube.
     effectType: 6
@@ -134,9 +134,9 @@ MonoBehaviour:
     levelCosts: 14000000i
   - nodeId: cart_cannon
     category: 1
+    direction: 0
     prerequisiteNodeIds:
     - cart_drive
-    mapPosition: {x: 500, y: -240}
     title: REAR CANNON
     description: Mount a cannon on the back of the cart that aims and fires at the cube.
     effectType: 8
@@ -146,9 +146,9 @@ MonoBehaviour:
     levelCosts: 0c000000i
   - nodeId: magnet_field
     category: 4
+    direction: 1
     prerequisiteNodeIds:
     - starter
-    mapPosition: {x: 0, y: 180}
     title: CURSOR MAGNET
     description: Unlock the magnet; click a cube to pull it.
     effectType: 7
@@ -158,9 +158,9 @@ MonoBehaviour:
     levelCosts: 03000000i
   - nodeId: magnet_range
     category: 4
+    direction: 1
     prerequisiteNodeIds:
     - magnet_field
-    mapPosition: {x: 0, y: 360}
     title: MAGNET RADIUS
     description: Increase the cursor magnet's radius.
     effectType: 9
@@ -170,9 +170,9 @@ MonoBehaviour:
     levelCosts: 0400000006000000090000000d00000012000000i
   - nodeId: magnet_pull_speed
     category: 4
+    direction: 1
     prerequisiteNodeIds:
     - magnet_field
-    mapPosition: {x: 180, y: 360}
     title: MAGNET FORCE
     description: Increase the cursor magnet's pull speed.
     effectType: 10
@@ -180,3 +180,102 @@ MonoBehaviour:
     startingLevel: 0
     maxLevel: 5
     levelCosts: 0400000006000000090000000d00000012000000i
+  - nodeId: damage_placeholder_1
+    category: 0
+    direction: 0
+    prerequisiteNodeIds:
+    - starter
+    title: DAMAGE TEST I
+    description: Layout-only placeholder for testing the damage branch.
+    effectType: 11
+    effectAmountPerLevel: 0
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 04000000i
+  - nodeId: utility_placeholder_1
+    category: 4
+    direction: 1
+    prerequisiteNodeIds:
+    - starter
+    title: UTILITY TEST I
+    description: Layout-only placeholder for testing the utility branch.
+    effectType: 11
+    effectAmountPerLevel: 0
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 04000000i
+  - nodeId: collection_placeholder_1
+    category: 1
+    direction: 2
+    prerequisiteNodeIds:
+    - cart_drive
+    title: COLLECTION TEST I
+    description: Layout-only placeholder for testing the collection branch.
+    effectType: 11
+    effectAmountPerLevel: 0
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 03000000i
+  - nodeId: economy_placeholder_1
+    category: 2
+    direction: 3
+    prerequisiteNodeIds:
+    - resource_bonus
+    title: ECONOMY TEST I
+    description: Layout-only placeholder for testing the economy branch.
+    effectType: 11
+    effectAmountPerLevel: 0
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 05000000i
+  - nodeId: damage_placeholder_2
+    category: 0
+    direction: 0
+    prerequisiteNodeIds:
+    - damage_placeholder_1
+    - economy_placeholder_1
+    title: DAMAGE TEST II
+    description: Layout-only placeholder; checks direction priority against a closer-priced economy parent.
+    effectType: 11
+    effectAmountPerLevel: 0
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 0e000000i
+  - nodeId: utility_placeholder_2
+    category: 4
+    direction: 1
+    prerequisiteNodeIds:
+    - utility_placeholder_1
+    - magnet_field
+    title: UTILITY TEST II
+    description: Layout-only placeholder for checking price-based parent selection within a branch.
+    effectType: 11
+    effectAmountPerLevel: 0
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 07000000i
+  - nodeId: collection_placeholder_2
+    category: 1
+    direction: 2
+    prerequisiteNodeIds:
+    - collection_placeholder_1
+    - cart_drive
+    title: COLLECTION TEST II
+    description: Layout-only placeholder for checking closest starting-price parent selection.
+    effectType: 11
+    effectAmountPerLevel: 0
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 06000000i
+  - nodeId: economy_placeholder_2
+    category: 2
+    direction: 3
+    prerequisiteNodeIds:
+    - economy_placeholder_1
+    title: ECONOMY TEST II
+    description: Layout-only placeholder for testing economy-branch spacing.
+    effectType: 11
+    effectAmountPerLevel: 0
+    startingLevel: 0
+    maxLevel: 1
+    levelCosts: 09000000i

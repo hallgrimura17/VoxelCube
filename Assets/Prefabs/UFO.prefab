@@ -775,7 +775,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UFOController
   orbitTarget: {fileID: 0}
   orbitCenterOffset: {x: -8, y: -8, z: -8}
-  projectilePrefab: {fileID: 6236004216238848982, guid: 2c1586a285c538d4391e93c6e7fbac4b, type: 3}
+  projectilePrefab: {fileID: 6383371018565458806, guid: 460318ac10ba73b4a9998536e3d527fe, type: 3}
   orbitRadius: 20
   orbitSpeed: 10
   directionChangeInterval: {x: 2, y: 5}

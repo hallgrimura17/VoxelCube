@@ -61,7 +61,6 @@ public class UpgradeController : MonoBehaviour
         }
         initialized = true;
         UIController.Instance.RefreshToolHotbar();
-        SoulCoreSystem.Instance.RefreshAbilityUnlocks();
     }
 
     /// <summary>Returns the current purchased level for an upgrade node.</summary>
@@ -148,6 +147,8 @@ public class UpgradeController : MonoBehaviour
                 break;
             case UpgradeEffectType.MagnetPullSpeed:
                 foreach (var magnet in FindObjectsByType<MagnetTool>()) magnet.ApplyMagnetPullSpeedUpgrade(amount);
+                break;
+            case UpgradeEffectType.Placeholder:
                 break;
         }
     }

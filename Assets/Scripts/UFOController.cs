@@ -1,12 +1,15 @@
 using Assets.Resources;
 using UnityEngine;
 
-/// <summary>Orbits the cube, fires mining shots, and can add a periodic high-damage beam attack.</summary>
+    /// <summary>Orbits the cube, fires mining shots, and provides its mastered beam ability.</summary>
 public class UFOController : MonoBehaviour, ISoulCoreCreature
 {
     public const string CreatureId = "UFO";
     private const float BeamRange = 200f;
     private const float BeamImpactRadius = 2.5f;
+    private const float AbilityBaseDuration = 2f;
+    private const float AbilityDamageInterval = 0.25f;
+    private const float AbilityDamageMultiplier = 1.5f;
     [SerializeField] private Transform orbitTarget;
     [SerializeField] private Vector3 orbitCenterOffset = new (8f, 8f, 8f);
     [SerializeField] private RayProjectile projectilePrefab;
@@ -31,13 +34,17 @@ public class UFOController : MonoBehaviour, ISoulCoreCreature
     private float nextBeamTime;
     private float beamTimeRemaining;
     private float beamDamage;
+    private float nextAbilityDamageTime;
+    private Vector3 beamTargetPoint;
+    private Vector3 beamTargetNormal;
+    private bool masteryBeamActive;
     private bool beamUpgradePurchased;
     private bool soulCoreSummoned;
     private bool CanFireAtCube => !TerrainChunkManager.instance.IsCollapsing && !TerrainChunkManager.instance.IsCubeCollapsed;
 
     public string SoulCoreCreatureId => CreatureId;
     public bool IsSoulCoreSummoned => soulCoreSummoned;
-    public bool CanActivateSoulCoreAbility => beamUpgradePurchased && CanFireAtCube;
+    public bool CanActivateSoulCoreAbility => MasterySystem.Instance.GetLevel(CreatureId) >= 2 && CanFireAtCube;
 
     /// <summary>Initializes this UFO as a summoned creature with its scene orbit target.</summary>
     public void Summon(Vector3 spawnPosition, Transform target)
@@ -106,10 +113,20 @@ public class UFOController : MonoBehaviour, ISoulCoreCreature
 
         if (beamLine.enabled)
         {
+            beamLine.SetPosition(0, transform.position);
             beamTimeRemaining -= deltaTime;
-            if (beamTimeRemaining <= 0f) beamLine.enabled = false;
+            if (beamTimeRemaining <= 0f)
+            {
+                beamLine.enabled = false;
+                masteryBeamActive = false;
+            }
+            else if (masteryBeamActive && Time.time >= nextAbilityDamageTime)
+            {
+                ApplyBeamDamage();
+                nextAbilityDamageTime = Time.time + AbilityDamageInterval;
+            }
         }
-        if (CanFireAtCube && beamUpgradePurchased && Time.time >= nextBeamTime) FireBeam(orbitCenter);
+        if (CanFireAtCube && beamUpgradePurchased && Time.time >= nextBeamTime) FireBeam(orbitCenter, beamDuration, false);
     }
 
     /// <summary>Enables the UFO beam and increases its mining damage by the purchased upgrade amount.</summary>
@@ -128,11 +145,12 @@ public class UFOController : MonoBehaviour, ISoulCoreCreature
         if (beamLine != null) beamLine.enabled = false;
     }
 
-    /// <summary>Immediately fires the purchased beam ability toward the cube.</summary>
+    /// <summary>Activates the mastered beam ability for its current duration.</summary>
     public void ActivateBeam()
     {
-        if (!beamUpgradePurchased) return;
-        FireBeam(orbitTarget.position + orbitCenterOffset);
+        var masteryLevel = MasterySystem.Instance.GetLevel(CreatureId);
+        if (masteryLevel < 2) return;
+        FireBeam(orbitTarget.position + orbitCenterOffset, AbilityBaseDuration * (masteryLevel >= 3 ? 2f : 1f), true);
     }
 
     void CreateBeamVisual()
@@ -151,7 +169,7 @@ public class UFOController : MonoBehaviour, ISoulCoreCreature
         beamLine.enabled = false;
     }
 
-    void FireBeam(Vector3 targetPosition)
+    void FireBeam(Vector3 targetPosition, float duration, bool isMasteryAbility)
     {
         if (!CanFireAtCube) return;
         var direction = (targetPosition - transform.position).normalized;
@@ -168,13 +186,25 @@ public class UFOController : MonoBehaviour, ISoulCoreCreature
         }
         if (foundHit)
         {
+            beamTargetPoint = targetHit.point;
+            beamTargetNormal = targetHit.normal;
             beamLine.SetPosition(0, transform.position);
-            beamLine.SetPosition(1, targetHit.point);
+            beamLine.SetPosition(1, beamTargetPoint);
             beamLine.enabled = true;
-            beamTimeRemaining = beamDuration;
-            VoxelModifier.MineChunksAtPoint(targetHit.point, targetHit.normal, BeamImpactRadius, beamDamage);
+            beamTimeRemaining = duration;
+            masteryBeamActive = isMasteryAbility;
+            nextAbilityDamageTime = Time.time + AbilityDamageInterval;
+            ApplyBeamDamage();
         }
         nextBeamTime = Time.time + beamInterval;
+    }
+
+    private void ApplyBeamDamage()
+    {
+        var masteryLevel = MasterySystem.Instance.GetLevel(CreatureId);
+        var baseDamage = beamDamage > 0f ? beamDamage : projectilePower * 220f;
+        var masteryMultiplier = masteryBeamActive && masteryLevel >= 4 ? AbilityDamageMultiplier : 1f;
+        VoxelModifier.MineChunksAtPoint(beamTargetPoint, beamTargetNormal, BeamImpactRadius, baseDamage * masteryMultiplier);
     }
 
     void OnDestroy()

@@ -87,13 +87,17 @@ public static class CubeResourceEntityFactory
         requests.Dispose();
     }
 
-    internal static void SpawnCollapseResource(VoxelModification modification, Vector3 launchDirection, float impulseMagnitude)
+    internal static void SpawnCollapseResource(VoxelModification modification, Vector3 launchDirection, float impulseMagnitude, int tier)
     {
         var entityManager = world.EntityManager;
         var entity = entityManager.Instantiate(resourcePrototype);
         var rotation = UnityEngine.Random.rotation;
         var entityRotation = new quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
-        entityManager.SetComponentData(entity, LocalTransform.FromPositionRotationScale(ToFloat3(modification.Position), entityRotation, ResourceScale));
+        var scale = GetResourceScale(tier, GameController.instance.ResourceCubeMergeSizeMultiplier);
+        entityManager.SetComponentData(entity, LocalTransform.FromPositionRotationScale(ToFloat3(modification.Position), entityRotation, scale));
+        entityManager.SetComponentData(entity, new CubeResource { Tier = tier });
+        entityManager.SetComponentData(entity, new URPMaterialPropertyBaseColor { Value = GetTierColor(tier) });
+        entityManager.SetComponentData(entity, CreateResourceMass(tier));
         entityManager.SetComponentData(entity, new PhysicsVelocity { Linear = ToFloat3(launchDirection.normalized * impulseMagnitude / ResourceMass), Angular = float3.zero });
     }
 

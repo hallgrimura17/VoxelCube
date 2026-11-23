@@ -31,6 +31,7 @@ public partial class TerrainChunkManager : MonoBehaviour
     private const float CollapseDropSpawnAreaSize = 6f;
     [SerializeField] private AnimationCurve collapseShrinkCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
     private bool prestigeGrantedForCubeClear;
+    private bool masteryPointGrantedForCubeClear;
     private bool isCollapsing;
     private bool isCubeCollapsed;
     private Coroutine collapseRoutine;
@@ -85,11 +86,7 @@ public partial class TerrainChunkManager : MonoBehaviour
             SoundManager.instance.PlaySoundClipAtLocation(collapsePosition, "VoxelCollapse");
         }
         if (disconnectedVoxels.Count > 0) GameController.instance.SpawnDisconnectedResources(disconnectedVoxels);
-        if (!prestigeGrantedForCubeClear && IsCubeCleared())
-        {
-            prestigeGrantedForCubeClear = true;
-            GameController.instance.TryUnlockNextPrestige();
-        }
+        GrantCubeClearRewards();
     }
 
     #region Helpers
@@ -282,11 +279,7 @@ public partial class TerrainChunkManager : MonoBehaviour
         }
         if (releasedVoxels.Count > 0) yield return SpawnCollapseDropsInBatches(releasedVoxels, collapsedCenter);
         lastDisconnectedVoxelCheckRevision = VoxelDataRevision;
-        if (!prestigeGrantedForCubeClear && IsCubeCleared())
-        {
-            prestigeGrantedForCubeClear = true;
-            GameController.instance.TryUnlockNextPrestige();
-        }
+        GrantCubeClearRewards();
         collapseRoutine = null;
         isCollapsing = false;
     }
@@ -300,16 +293,24 @@ public partial class TerrainChunkManager : MonoBehaviour
     private IEnumerator SpawnCollapseDropsInBatches(List<VoxelModification> releasedVoxels, Vector3 spawnAreaCenter)
     {
         var halfAreaSize = CollapseDropSpawnAreaSize * 0.5f;
-        for (var startIndex = 0; startIndex < releasedVoxels.Count; startIndex += CollapseDropBatchSize)
+        var sourceIndex = 0;
+        while (sourceIndex < releasedVoxels.Count)
         {
-            var endIndex = Mathf.Min(startIndex + CollapseDropBatchSize, releasedVoxels.Count);
-            for (var index = startIndex; index < endIndex; index++)
+            var spawnedCount = 0;
+            while (sourceIndex < releasedVoxels.Count && spawnedCount < CollapseDropBatchSize)
             {
-                var voxel = releasedVoxels[index];
+                var remainingDrops = releasedVoxels.Count - sourceIndex;
+                var maximumTier = 0;
+                while (maximumTier < 5 && (1 << (maximumTier + 1)) <= remainingDrops) maximumTier++;
+                var tier = UnityEngine.Random.Range(0, maximumTier + 1);
+                var consumedDrops = 1 << tier;
+                var voxel = releasedVoxels[sourceIndex];
                 voxel.Position = spawnAreaCenter + new Vector3(UnityEngine.Random.Range(-halfAreaSize, halfAreaSize), UnityEngine.Random.Range(-halfAreaSize, halfAreaSize), UnityEngine.Random.Range(-halfAreaSize, halfAreaSize));
-                GameController.instance.SpawnCollapseResource(voxel, UnityEngine.Random.onUnitSphere, CollapsedVoxelImpulseMultiplier);
+                GameController.instance.SpawnCollapseResource(voxel, UnityEngine.Random.onUnitSphere, CollapsedVoxelImpulseMultiplier, tier);
+                sourceIndex += consumedDrops;
+                spawnedCount++;
             }
-            if (endIndex < releasedVoxels.Count) yield return null;
+            if (sourceIndex < releasedVoxels.Count) yield return null;
         }
     }
 
@@ -322,6 +323,7 @@ public partial class TerrainChunkManager : MonoBehaviour
         isCubeCollapsed = false;
         pendingCollapseVoxels.Clear();
         prestigeGrantedForCubeClear = false;
+        masteryPointGrantedForCubeClear = false;
         if (Chunk != null)
         {
             Chunk.transform.localPosition = chunkBasePosition;
@@ -338,6 +340,21 @@ public partial class TerrainChunkManager : MonoBehaviour
         for (var index = 0; index < Chunk.Density.Length; index++)
             if (Chunk.Density[index] >= IsoLevel) return false;
         return true;
+    }
+
+    private void GrantCubeClearRewards()
+    {
+        if (!IsCubeCleared()) return;
+        if (!prestigeGrantedForCubeClear)
+        {
+            prestigeGrantedForCubeClear = true;
+            GameController.instance.TryUnlockNextPrestige();
+        }
+        if (!masteryPointGrantedForCubeClear)
+        {
+            masteryPointGrantedForCubeClear = true;
+            MasterySystem.Instance.AddSkillPoints(1);
+        }
     }
 
     public VoxelModification MineChunksAtPosition(Vector3 worldPoint, int amount, Vector3 normal)

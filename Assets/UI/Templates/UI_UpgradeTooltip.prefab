@@ -513,6 +513,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4618871226097411246}
   - component: {fileID: 4940690059169657167}
+  - component: {fileID: 6440266322335886741}
   m_Layer: 0
   m_Name: UI_UpgradeTooltip
   m_TagString: Untagged
@@ -554,11 +555,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeTooltip
   tooltipPanel: {fileID: 2567837937647829453}
+  tooltipShadow: {fileID: 0}
   titleText: {fileID: 6208811319140120506}
   descriptionText: {fileID: 2957684526046874558}
   priceText: {fileID: 9097328775610563715}
   canvasRect: {fileID: 0}
+  treeViewport: {fileID: 0}
   pointerOffset: {x: 24, y: 0}
+--- !u!225 &6440266322335886741
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3732967780511162443}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!1 &5397197103840028970
 GameObject:
   m_ObjectHideFlags: 0

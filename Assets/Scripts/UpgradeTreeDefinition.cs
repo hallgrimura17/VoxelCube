@@ -23,7 +23,16 @@ public enum UpgradeEffectType
     Magnet,
     CartCannon,
     MagnetRange,
-    MagnetPullSpeed
+    MagnetPullSpeed,
+    Placeholder
+}
+
+public enum UpgradeDirection
+{
+    Damage,
+    Utility,
+    Collection,
+    Economy
 }
 
 [Serializable]
@@ -31,8 +40,8 @@ public class UpgradeNodeDefinition
 {
     public string nodeId;
     public UpgradeCategory category;
+    public UpgradeDirection direction;
     public string[] prerequisiteNodeIds;
-    public Vector2 mapPosition;
     public string title;
     [TextArea] public string description;
     public UpgradeEffectType effectType;

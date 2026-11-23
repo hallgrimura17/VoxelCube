@@ -60,30 +60,27 @@ public partial class CubeResourceVaporisingSystem : SystemBase
 
         var vaporisedCount = 0;
         var averagePosition = float3.zero;
-        var averageColor = float4.zero;
-        var averageSize = 0f;
         var averageTier = 0f;
         var rewardPopup = CurrencyRewardPopup.Instance;
         while (vaporisedResources.TryDequeue(out var vaporisedResource))
         {
             var rewardPosition = new Vector3(vaporisedResource.Position.x, vaporisedResource.Position.y, vaporisedResource.Position.z);
             rewardPopup.Show(vaporisedResource.Reward, rewardPosition);
+            var particleCount = 5 * (vaporisedResource.Tier + 1);
+            var particleColor = new Color(vaporisedResource.Color.x, vaporisedResource.Color.y, vaporisedResource.Color.z, 1f);
+            Assets.Resources.ParticleManager.instance.EmitParticleEffectWithSizeMultiplierAndColor("CubeParticle", rewardPosition, Quaternion.identity, particleCount, vaporisedResource.Size, particleColor);
+            Assets.Resources.ParticleManager.instance.EmitParticleEffectWithSizeMultiplierAndColor("Merge", rewardPosition, Quaternion.identity, 1, vaporisedResource.Size, particleColor);
             EntityManager.DestroyEntity(vaporisedResource.Entity);
             vaporisedCount++;
             averagePosition += vaporisedResource.Position;
-            averageColor += vaporisedResource.Color;
-            averageSize += vaporisedResource.Size;
             averageTier += vaporisedResource.Tier;
         }
 
         vaporisedResources.Clear();
         if (vaporisedCount == 0) return;
         averagePosition /= vaporisedCount;
-        averageColor /= vaporisedCount;
-        averageSize /= vaporisedCount;
         averageTier /= vaporisedCount;
         var popupPosition = new Vector3(averagePosition.x, averagePosition.y, averagePosition.z);
-        Assets.Resources.ParticleManager.instance.EmitParticleEffectWithSizeMultiplierAndColor("Merge", popupPosition, Quaternion.identity, vaporisedCount * 6, averageSize, new Color(averageColor.x, averageColor.y, averageColor.z, 1f));
         Assets.Resources.SoundManager.instance.PlaySoundClipAtLocation(popupPosition, "CubeDissolve", 2f / (1f + averageTier * 0.08f));
     }
 

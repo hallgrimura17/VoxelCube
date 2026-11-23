@@ -8,6 +8,7 @@ public class BlasterTool : PlayerTool
 {
     public List<RayProjectile> Projectiles = new ();
     public bool SpawnFromCamera = true;
+    public float OrbitDistance => desiredCameraDistance;
     public override string DisplayName => "Blaster";
     public override int HotbarOrder => 0;
     public override bool IsUnlocked => true;
@@ -20,6 +21,7 @@ public class BlasterTool : PlayerTool
     private const float MaxOrbitPitch = 80f;
     private const float CameraSurfacePadding = 5f;
     private const float CameraOriginVerticalOffset = 0.5f;
+    private const float MaximumAimDistance = 1000f;
     private const float MinimumCameraDistance = 0.05f;
     [SerializeField] private float zoomSensitivity = 0.01f;
     private const int GroundLayerIndex = 3;
@@ -57,12 +59,13 @@ public class BlasterTool : PlayerTool
             mainCamera = Camera.main;
         }
         var mouse = Mouse.current;
+        var isOrbitMode = PlayerPerspectiveController.Instance == null || PlayerPerspectiveController.Instance.CurrentMode == PlayerPerspectiveController.PerspectiveMode.Orbit;
         if (UIController.Instance.IsGameplayInputBlocked)
         {
-            UpdateCameraZoom(mouse, false);
+            if (isOrbitMode) UpdateCameraZoom(mouse, false);
             return;
         }
-        if (mouse.rightButton.isPressed)
+        if (isOrbitMode && mouse.rightButton.isPressed)
         {
             var mouseDelta = mouse.delta.ReadValue();
             orbitYaw += mouseDelta.x * orbitSensitivity;
@@ -74,7 +77,7 @@ public class BlasterTool : PlayerTool
             ShootProjectile(0);
             nextFireTime = Time.time + baseFireInterval / fireRateMultiplier;
         }
-        UpdateCameraZoom(mouse, true);
+        if (isOrbitMode) UpdateCameraZoom(mouse, true);
     }
 
     void UpdateCameraZoom(Mouse mouse, bool readScrollWheel)
@@ -88,6 +91,15 @@ public class BlasterTool : PlayerTool
         var localPosition = playerCameraTransform.localPosition;
         localPosition.z = -cameraDistance;
         playerCameraTransform.localPosition = localPosition;
+    }
+
+    /// <summary>Synchronizes orbit angles and camera distance after returning from a free-movement mode.</summary>
+    public void SetOrbitState(float yaw, float pitch, float distance)
+    {
+        orbitYaw = yaw;
+        orbitPitch = pitch;
+        desiredCameraDistance = distance;
+        cameraPivot.rotation = Quaternion.Euler(orbitPitch, orbitYaw, 0f);
     }
 
     /// <summary>Toggles projectile spawning between the camera and the player weapon position.</summary>
@@ -113,22 +125,23 @@ public class BlasterTool : PlayerTool
 
     public void ShootProjectile(int index)
     {
-        var ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
-        var position = SpawnFromCamera ? ray.origin - mainCamera.transform.up * CameraOriginVerticalOffset : ray.origin;
-        var direction = ray.direction;
+        var aimPosition = Cursor.lockState == CursorLockMode.Locked ? new Vector2(Screen.width * 0.5f, Screen.height * 0.5f) : Mouse.current.position.ReadValue();
+        var aimRay = mainCamera.ScreenPointToRay(aimPosition);
+        var position = aimRay.origin - mainCamera.transform.up * CameraOriginVerticalOffset;
+        var direction = aimRay.direction;
         if (!SpawnFromCamera)
         {
-            position += direction * -playerCameraTransform.localPosition.z;
-            if (Physics.Raycast(ray, out RaycastHit hit, -playerCameraTransform.localPosition.z)) position = hit.point;
-            direction = transform.root.position - position;
-            if (direction.sqrMagnitude < MinAimDirectionSqrMagnitude)
-            {
-                position = ray.origin;
-                direction = ray.direction;
-            }
+            var targetCenter = GameController.CubeOffset;
+            var targetCollider = TerrainChunkManager.instance.Chunk.GetComponent<MeshCollider>();
+            var aimPoint = targetCollider.Raycast(aimRay, out var hit, MaximumAimDistance) ? hit.point : aimRay.GetPoint(Mathf.Max(0f, Vector3.Dot(targetCenter - aimRay.origin, aimRay.direction)));
+            var lineDirection = (targetCenter - aimPoint).normalized;
+            position = transform.position + transform.up * CameraOriginVerticalOffset;
+            if (lineDirection.sqrMagnitude < MinAimDirectionSqrMagnitude) direction = targetCenter - position;
             else
             {
-                position += direction.normalized * playerCameraTransform.localPosition.z;
+                var distanceBehindAimPoint = Vector3.Dot(position - aimPoint, lineDirection);
+                position = aimPoint + lineDirection * Mathf.Min(0f, distanceBehindAimPoint);
+                direction = lineDirection;
             }
         }
 

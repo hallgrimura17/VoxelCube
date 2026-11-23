@@ -69,6 +69,7 @@ public class UIController : MonoBehaviour
         currencyText.text = $"${currency:N0}";
         currencyText.color = CurrencyColor;
         UpgradeTreeController.Instance.RefreshNodes();
+        UpgradeTooltip.Instance.RefreshCurrency();
     }
 
     /// <summary>Refreshes the prestige controls after the selected prestige changes.</summary>
@@ -99,12 +100,12 @@ public class UIController : MonoBehaviour
     }
 
     /// <summary>Refreshes one creature's count, cost, and summon/unsummon/ability controls.</summary>
-    public void RefreshSoulCoreCreature(string creatureId, string displayName, int count, int cost, int soulCores, string abilityName, string cooldownText, bool abilityUnlocked, bool abilityInteractable)
+    public void RefreshSoulCoreCreature(string creatureId, string displayName, int count, int cost, int soulCores, string abilityName, string cooldownText, bool creatureUnlocked, bool abilityUnlocked, bool abilityInteractable)
     {
         var creatureUI = FindSoulCoreCreatureUI(creatureId);
-        creatureUI.countText.text = $"{displayName} [{count}]";
-        creatureUI.costText.text = $"{cost}";
-        creatureUI.summonButton.interactable = soulCores >= cost;
+        creatureUI.countText.text = creatureUnlocked ? $"{displayName} [{count}]" : $"{displayName} [LOCKED]";
+        creatureUI.costText.text = creatureUnlocked ? $"{cost}" : "LOCKED";
+        creatureUI.summonButton.interactable = creatureUnlocked && soulCores >= cost;
         creatureUI.unsummonButton.interactable = count > 0;
         creatureUI.abilityButton.gameObject.SetActive(abilityUnlocked);
         creatureUI.abilityButton.interactable = abilityInteractable;

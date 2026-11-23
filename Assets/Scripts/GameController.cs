@@ -55,10 +55,10 @@ public class GameController : MonoBehaviour
         CubeResourceEntityFactory.SpawnResources(modifications, CubeOffset, Vector3.zero, CubeOffset, resourceSpawnImpulse * pushMultiplier, resourceCubeCenterPushImpulse * pushMultiplier);
     }
 
-    internal void SpawnCollapseResource(VoxelModification modification, Vector3 launchDirection, float impulseMultiplier)
+    internal void SpawnCollapseResource(VoxelModification modification, Vector3 launchDirection, float impulseMultiplier, int tier)
     {
         var pushMultiplier = disconnectedResourcePushMultiplier * impulseMultiplier;
-        CubeResourceEntityFactory.SpawnCollapseResource(modification, launchDirection, resourceSpawnImpulse * pushMultiplier);
+        CubeResourceEntityFactory.SpawnCollapseResource(modification, launchDirection, resourceSpawnImpulse * pushMultiplier, tier);
     }
 
     internal void SetResourceAttraction(Entity targetEntity, Vector3 destination, float range, float pullSpeed)

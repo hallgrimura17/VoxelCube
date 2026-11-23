@@ -3,18 +3,22 @@ using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
 
-/// <summary>Moves the summoned cart toward nearby resource cubes without collecting them.</summary>
+/// <summary>Moves the summoned cart toward nearby resource cubes and can overclock its chase speed.</summary>
 public sealed class ResourceCartChaser : MonoBehaviour, ISoulCoreCreature
 {
     private const float ChaseRange = 30f;
     private const float MovementSpeed = 5f;
+    private const float AbilityDuration = 3f;
+    private const float AbilitySpeedMultiplier = 2f;
+    private const float MasteredAbilitySpeedMultiplier = 3f;
     public const string CreatureId = "Cart";
     private EntityQuery resourceQuery;
+    private float abilityTimeRemaining;
     private bool soulCoreSummoned;
 
     public string SoulCoreCreatureId => CreatureId;
     public bool IsSoulCoreSummoned => soulCoreSummoned;
-    public bool CanActivateSoulCoreAbility => false;
+    public bool CanActivateSoulCoreAbility => MasterySystem.Instance.GetLevel(CreatureId) >= 2;
 
     /// <summary>Initializes the summoned cart at its requested position.</summary>
     public void Summon(Vector3 spawnPosition, Transform target)
@@ -30,9 +34,11 @@ public sealed class ResourceCartChaser : MonoBehaviour, ISoulCoreCreature
         Destroy(gameObject);
     }
 
-    /// <summary>Activates the cart's optional ability.</summary>
+    /// <summary>Overclocks the cart's resource chase for its mastery duration.</summary>
     public void ActivateSoulCoreAbility()
     {
+        var masteryLevel = MasterySystem.Instance.GetLevel(CreatureId);
+        abilityTimeRemaining = AbilityDuration * (masteryLevel >= 3 ? 2f : 1f);
     }
 
     private void Start()
@@ -43,6 +49,10 @@ public sealed class ResourceCartChaser : MonoBehaviour, ISoulCoreCreature
 
     private void Update()
     {
+        var masteryLevel = MasterySystem.Instance.GetLevel(CreatureId);
+        var abilityActive = abilityTimeRemaining > 0f;
+        abilityTimeRemaining = Mathf.Max(0f, abilityTimeRemaining - Time.deltaTime);
+        var movementMultiplier = abilityActive ? (masteryLevel >= 4 ? MasteredAbilitySpeedMultiplier : AbilitySpeedMultiplier) : 1f;
         var resourceTransforms = resourceQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
         var nearestPosition = transform.position;
         var nearestDistanceSquared = ChaseRange * ChaseRange;
@@ -57,6 +67,6 @@ public sealed class ResourceCartChaser : MonoBehaviour, ISoulCoreCreature
             hasTarget = true;
         }
         resourceTransforms.Dispose();
-        if (hasTarget) transform.position = Vector3.MoveTowards(transform.position, nearestPosition, MovementSpeed * Time.deltaTime);
+        if (hasTarget) transform.position = Vector3.MoveTowards(transform.position, nearestPosition, MovementSpeed * movementMultiplier * Time.deltaTime);
     }
 }

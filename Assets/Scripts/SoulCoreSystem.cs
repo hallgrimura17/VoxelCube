@@ -84,7 +84,7 @@ public class SoulCoreSystem : MonoBehaviour
 
     private void SummonCreature(CreatureDefinition definition)
     {
-        if (soulCores < definition.soulCoreCost) return;
+        if (!MasterySystem.Instance.IsCreatureUnlocked(definition.creatureId) || soulCores < definition.soulCoreCost) return;
         SpawnCreature(definition);
         creatureCounts[definition.creatureId]++;
         soulCores -= definition.soulCoreCost;
@@ -120,6 +120,7 @@ public class SoulCoreSystem : MonoBehaviour
 
     private void RestoreCreatureCount(CreatureDefinition definition)
     {
+        if (!MasterySystem.Instance.IsCreatureUnlocked(definition.creatureId)) return;
         var savedCount = GetSavedCreatureCount(definition);
         while (creatureCounts[definition.creatureId] < savedCount)
         {
@@ -169,7 +170,7 @@ public class SoulCoreSystem : MonoBehaviour
 
     private bool IsAbilityUnlocked(CreatureDefinition definition)
     {
-        return !string.IsNullOrEmpty(definition.abilityUpgradeId) && UpgradeController.Instance.IsInitialized && UpgradeController.Instance.GetLevel(definition.abilityUpgradeId) > 0;
+        return MasterySystem.Instance.GetLevel(definition.creatureId) >= 2;
     }
 
     private void SaveSoulCores()
@@ -195,7 +196,8 @@ public class SoulCoreSystem : MonoBehaviour
         var abilityUnlocked = IsAbilityUnlocked(definition);
         var abilityAvailable = abilityUnlocked && cooldown <= 0f && FindSummonedCreatures(definition.creatureId).Exists(creature => creature.CanActivateSoulCoreAbility);
         var cooldownText = cooldown > 0f ? FormatCooldown(cooldown) : string.Empty;
-        UIController.Instance.RefreshSoulCoreCreature(definition.creatureId, definition.displayName, creatureCounts[definition.creatureId], definition.soulCoreCost, soulCores, definition.abilityName, cooldownText, abilityUnlocked, abilityAvailable);
+        var abilityName = string.IsNullOrEmpty(definition.abilityName) ? definition.creatureId == ResourceCartChaser.CreatureId ? "RUSH" : "BEAM" : definition.abilityName;
+        UIController.Instance.RefreshSoulCoreCreature(definition.creatureId, definition.displayName, creatureCounts[definition.creatureId], definition.soulCoreCost, soulCores, abilityName, cooldownText, MasterySystem.Instance.IsCreatureUnlocked(definition.creatureId), abilityUnlocked, abilityAvailable);
     }
 
     private static string FormatCooldown(float remaining)

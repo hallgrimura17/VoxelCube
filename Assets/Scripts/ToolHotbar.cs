@@ -19,10 +19,15 @@ public class ToolHotbar : MonoBehaviour
     [SerializeField] private TMP_Text[] blasterModeLabels;
     [SerializeField] private Button[] magnetModeButtons;
     [SerializeField] private TMP_Text[] magnetModeLabels;
+    [SerializeField] private Button[] perspectiveButtons;
+    [SerializeField] private GameObject perspectiveCrosshair;
+
+    [SerializeField] private TMP_Text[] perspectiveLabels;
     private readonly List<PlayerTool> unlockedTools = new();
     private PlayerTool selectedTool;
     private BlasterTool blasterTool;
     private MagnetTool magnetTool;
+    private PlayerPerspectiveController perspectiveController;
 
     public static ToolHotbar Instance { get; private set; }
 
@@ -43,12 +48,26 @@ public class ToolHotbar : MonoBehaviour
         magnetModeButtons[0].onClick.AddListener(() => magnetTool.SetSelectMode());
         magnetModeButtons[1].onClick.AddListener(() => magnetTool.SetPullMode());
         RefreshTools();
+        perspectiveController = blasterTool.transform.parent.gameObject.AddComponent<PlayerPerspectiveController>();
+        perspectiveController.Initialize(blasterTool);
+        perspectiveCrosshair.SetActive(false);
+        for (var index = 0; index < perspectiveButtons.Length; index++)
+        {
+            var mode = (PlayerPerspectiveController.PerspectiveMode)index;
+            perspectiveButtons[index].onClick.AddListener(() => perspectiveController.SetMode(mode));
+        }
+        RefreshPerspectiveControls();
     }
 
     void Update()
     {
         var keyboard = Keyboard.current;
         if (keyboard.fKey.wasPressedThisFrame)
+        {
+            perspectiveController.CycleMode();
+            return;
+        }
+        if (keyboard.eKey.wasPressedThisFrame)
         {
             ToggleSelectedToolMode();
             return;
@@ -93,6 +112,25 @@ public class ToolHotbar : MonoBehaviour
         SelectTool(selectedIndex >= 0 ? selectedIndex : unlockedTools.Count > 0 ? 0 : -1, false);
         RefreshModeControls();
     }
+
+    /// <summary>Refreshes perspective selector highlighting to match the active movement mode.</summary>
+    public void RefreshPerspectiveControls()
+    {
+        if (perspectiveButtons == null) return;
+        for (var index = 0; index < perspectiveButtons.Length; index++)
+        {
+            var isSelected = (int)perspectiveController.CurrentMode == index;
+            perspectiveButtons[index].targetGraphic.color = isSelected ? SelectedModeColor : UnselectedModeColor;
+        }
+    }
+
+    /// <summary>Shows the center-screen reticle only in Free Cam and FPS perspectives.</summary>
+    public void SetPerspectiveCrosshairVisible(bool isVisible)
+    {
+        perspectiveCrosshair.SetActive(isVisible);
+    }
+
+
 
     /// <summary>Refreshes mode button visibility, labels, and active-mode highlighting.</summary>
     public void RefreshModeControls()
